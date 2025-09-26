@@ -1,0 +1,204 @@
+Практическая работа ПИ05 Зенов
+
+
+1й Код на С++ с ривверсивным линейным списком:             Объяснение:
+
+
+#include <iostream>                включаем готовый модуль позволяющий выводить текст в окне
+using namespace std;         испольузем модуль std 
+
+class Node {               задаем узел пока никуда не направленный
+public:                             можно обращаться к этому узлу из любой части программы 
+    int data;                    тип - число
+    Node *next;               вводим куда обращаься дальше
+    Node(int d) {                создаем новый узел интовый
+        data = d;                          D - число которые записываем в переменную дата
+        next = NULL;                    не формируем куда обратиться этому узлу
+    } 
+};
+
+Node *reverseList(Node *head) {               фукция указывающая на первый узел (голову) и вернет укзатель на новую голову после разворота
+    Node *prev = NULL;                              задаем переменную прев это указатель на предедущий узел
+    Node *curr = head;                 указатель на первый узел (голова)
+    Node *next = NULL;                    временная переменная записывающая след узел
+    while (curr != NULL) {            цикл пока не дошли до конца списка 
+        next = curr->next;               запоминаем указатель текущий 
+        curr->next = prev;              перемещаем переменную вперед теперь движемся в другую сторону 
+        prev = curr;         двигаемся дальше в перевернутый узел который станет предедущим при следующей итерации
+        curr = next;        двигаемся дальше
+    }
+    return prev;    когда переменная curr = NULL a prev равен новому узлу возвращаем его
+}
+
+void printList(Node *node) {             печатаем список по очереди
+    while (node != NULL) {               пока есть узел
+        cout << node->data << " ";         печатаем число из текущего узла с пробелом
+        node = node->next;                идем дальше
+    }
+}
+
+int main() {                                     начало основной программы 
+    Node *head = new Node(1);        создаем новый узел с числом 1 и записываем адресм в head  
+    head->next = new Node(2);        создаем новый узел с числом 2 и записываем адресм в head и крепим к первому
+    head->next->next = new Node(3);   создаем новый узел с числом 3 и записываем адресм в head и крепим к второму
+    head->next->next->next = new Node(4);    создаем новый узел с числом 4 и записываем адресм в head и крепим к третьему
+    head = reverseList(head);      разворот головы и теперь первое число 4 
+    printList(head);   вывод будет  4 3 2 1
+    return 0;               завершаем программу 
+}
+
+
+
+
+
+2й Код на С++  :             Объяснение:
+
+#include <iostream>             библиотека выводящая текств консоль
+using namespace std;        упрощение 
+
+struct Node {             задаем узел
+    int data;          выделяем память под числовое значение
+    Node *next;      делаем указатель на следующий узел программы 
+    Node(int d) : data(d), next(NULL) {}  присоздании списка ему присваиваем значение d- и пустое направление к другому узлу
+};
+
+Node* deleteRecursive(Node *head, int key) {  функция считывающая 2 аргумента начало списка и искомое для удаления число
+    if (head == NULL) return NULL;   при пустом списке возвращаем нул
+    if (head->data == key) {         если в узле нет числа вызываем тоже самое для след узла
+        Node *temp = head->next;     вызываем для другого узла 
+        delete head;                удаляем текущий
+        return temp;           возвращаем другой узел как главный
+    } 
+    head->next = deleteRecursive(head->next, key); проверка ни здесь ли число и проверяем дальше и в конец возвращаем
+    return head;    возвращает текущий узел и меняем путь 
+}
+
+void printList(Node *head) {   начало с начала 
+    while (head != NULL) {     пока узел голова не пуста 
+        cout << head->data << " ";  печатаем число
+        head = head->next; двигаемся дальше
+    }
+    cout << endl;
+}
+
+int main() {
+    Node *head = new Node(1);                       создаем узел с 1 
+    head->next = new Node(2);                            создаем узел с 2
+    head->next->next = new Node(3);               создаем узел с 3
+    head->next->next->next = new Node(4);         создаем узел с 4 и соединяем последовательно
+
+    head = deleteRecursive(head, 3);  удаляем узел с числом 3 
+    printList(head);  печатаем1 2 4
+
+    return 0;
+}
+
+
+
+
+
+1й пример на Java с линейным списком                          Объяснение:
+
+
+
+public class LinkedListDel {                    создаем программу новую с классом LInkedList
+    Node head;                                      первый узел (голова) (пустой)
+
+    static class Node {                          вкладываем новый узел
+        int data;                                   данные под числовую переменную
+        Node next;                      указатель на след узел
+        Node(int d) {                    создаем узел с числом внутри но никуда не ведущий 
+            data = d;             выделяем память  и создаем переменную
+            next = null;
+        }
+    }
+
+    public static LinkedListDel deleteByKey(LinkedListDel list, int key) { функция удаляет узел числов котором равно (key)
+        Node curr = list.head, prev = null;  curr - текущий узел, prev - предедещий узел
+
+        if (curr != null && curr.data == key) { если список не пуст и в первом узле есть нужное число то переносим (head) глову программы на следующий узел 
+            list.head = curr.next;
+            return list;   возвращаем новый список
+        }
+
+        while (curr != null && curr.data != key) {                        идем дальше по списку пока не найдется нужное число или не дойдем до конца
+            prev = curr;                            prev становится предедущим значением curr 
+            curr = curr.next;             curr обновляется
+        }
+
+        if (curr == null) return list; если дойдя до конца число не найдено 
+
+        prev.next = curr.next;  не меняем список
+        return list;              возвращаем список 
+    }
+
+    public static void printList(LinkedListDel list) {    модуль 
+        Node curr = list.head;               идем по узлам и если находим узел с нужным числом то пропускаем его и узел перед ним ориентируется на следующий 
+        while (curr != null) {
+            System.out.print(curr.data + " ");
+            curr = curr.next;
+        }
+        System.out.println();   выводим
+    }
+
+    public static void main(String[] args) {
+        LinkedListDel list = new LinkedListDel();                создаем список
+        list.head = new Node(1);                              добавяем  1
+        list.head.next = new Node(2);                         добавяем  2
+        list.head.next.next = new Node(3);                     добавяем  3
+        list.head.next.next.next = new Node(4);               добавяем  4
+
+        list = deleteByKey(list, 3);                          удаляем узел с тройкой 
+        printList(list);  dasjklbncz  1 2 4              выводим все узлы кроме содержащего число 3 
+    }
+}
+
+2й пример на Java с линейным списком            Объяснение:
+
+public class LinkedList { задаем класс программы 
+    Node head;       задаем пустую голову первый элемент 
+
+    static class Node {     создаем новый узел 
+        int data;           числовое значение 
+        Node next;          указатель на следующий узел 
+        Node(int d) {   когда создается узел в него кладется число и 
+            data = d;
+            next = null; создаем укащатель на следующуц узел
+        }
+    }
+
+    public static LinkedList insert(LinkedList list, int data) {  функция вставляет новое число в конец списка
+        Node new_node = new Node(data); новый узел с нужным числом 
+        new_node.next = null;   не делаем список 
+
+        if (list.head == null) { если список пуст то новый узел становится первым 
+            list.head = new_node;
+        } else {                            движемся дальше вниз пока не доходим до низу и присоденяем к ней новый узел
+            Node last = list.head;
+            while (last.next != null) {
+                last = last.next;
+            }
+            last.next = new_node;
+        }
+        return list;                                возвращем новый список 
+    }
+
+    public static void printList(LinkedList list) { (печатаем все числа функция)
+        Node curr = list.head;                    начинает с первого узла
+        while (curr != null) {                  пока есть узел печатаем число в нем с пробелом и выполняем программу дальше
+            System.out.print(curr.data + " ");
+            curr = curr.next;
+        }
+        System.out.println();                  перевод строки в конце
+    }
+
+    public static void main(String[] args) {        старт программы 
+        LinkedList list = new LinkedList();           создаем пустой список
+        list = insert(list, 1);       добавляем 1 
+        list = insert(list, 2);       добавляем 2 
+        list = insert(list, 3);       добавляем 3
+        printList(list);  печатаем: 1 2 3
+    }
+}
+
+
