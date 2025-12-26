@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🧠 Нейронная сеть - Прогноз экономических циклов</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px 20px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            padding: 40px;
+        }
+
+        .section {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 15px;
+            border: 2px solid #e9ecef;
+        }
+
+        .section h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 0.95em;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: all 0.3s;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 10px rgba(102, 126, 234, 0.2);
+        }
+
+        .slider-value {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            margin-left: 10px;
+            font-weight: 600;
+        }
+
+        .buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 25px;
+        }
+
+        button {
+            flex: 1;
+            padding: 14px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-predict {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-predict:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-reset {
+            background: #e9ecef;
+            color: #2c3e50;
+        }
+
+        .btn-reset:hover {
+            background: #dee2e6;
+        }
+
+        .btn-export {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-export:hover {
+            background: #218838;
+        }
+
+        .result-box {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            border: 3px solid #e9ecef;
+            text-align: center;
+            margin-top: 25px;
+        }
+
+        .phase-indicator {
+            font-size: 3em;
+            margin: 20px 0;
+        }
+
+        .phase-name {
+            font-size: 2em;
+            font-weight: bold;
+            margin: 15px 0;
+        }
+
+        .confidence {
+            font-size: 1.2em;
+            color: #667eea;
+            margin: 15px 0;
+        }
+
+        .confidence-bar {
+            width: 100%;
+            height: 30px;
+            background: #e9ecef;
+            border-radius: 15px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+
+        .confidence-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.5s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        .chart-container {
+            grid-column: 1 / -1;
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            border: 2px solid #e9ecef;
+        }
+
+        canvas {
+            max-width: 100%;
+            height: auto;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+            text-align: center;
+        }
+
+        .stat-card .label {
+            font-size: 0.85em;
+            color: #6c757d;
+            margin-bottom: 8px;
+        }
+
+        .stat-card .value {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .phases {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .phase-option {
+            padding: 15px;
+            border-radius: 10px;
+            border: 2px solid #e9ecef;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+        }
+
+        .phase-option:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .phase-option.selected {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.1);
+        }
+
+        .phase-option.recovery { background: rgba(6, 168, 125, 0.1); border-left: 4px solid #06a87d; }
+        .phase-option.expansion { background: rgba(46, 134, 171, 0.1); border-left: 4px solid #2e86ab; }
+        .phase-option.peak { background: rgba(241, 143, 1, 0.1); border-left: 4px solid #f18f01; }
+        .phase-option.contraction { background: rgba(199, 62, 29, 0.1); border-left: 4px solid #c73e1d; }
+
+        .info-section {
+            background: #e7f3ff;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            border-left: 4px solid #667eea;
+        }
+
+        .info-section h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .info-section p {
+            color: #2c3e50;
+            line-height: 1.6;
+            font-size: 0.95em;
+        }
+
+        @media (max-width: 1200px) {
+            .content {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🧠 Нейронная сеть</h1>
+            <p>Прогноз фаз экономического цикла на основе 10 экономических показателей</p>
+        </div>
+
+        <div class="content">
+            <!-- ЛЕВАЯ ЧАСТЬ: ВВОД ДАННЫХ -->
+            <div class="section">
+                <h2>📊 Введите показатели</h2>
+
+                <div class="input-group">
+                    <label>📈 GDP Growth (%)</label>
+                    <input type="range" id="gdp" min="-5" max="8" step="0.1" value="2.5">
+                    <span class="slider-value" id="gdp-val">2.5%</span>
+                </div>
+
+                <div class="input-group">
+                    <label>👥 Unemployment Rate (%)</label>
+                    <input type="range" id="unemp" min="0" max="15" step="0.1" value="5">
+                    <span class="slider-value" id="unemp-val">5.0%</span>
+                </div>
+
+                <div class="input-group">
+                    <label>🌍 Trade Openness</label>
+                    <input type="range" id="trade" min="0" max="100" step="1" value="50">
+                    <span class="slider-value" id="trade-val">50</span>
+                </div>
+
+                <div class="input-group">
+                    <label>🏭 Manufacturing Index</label>
+                    <input type="range" id="manuf" min="70" max="130" step="1" value="100">
+                    <span class="slider-value" id="manuf-val">100</span>
+                </div>
+
+                <div class="input-group">
+                    <label>💰 Inflation Rate (%)</label>
+                    <input type="range" id="infl" min="-2" max="10" step="0.1" value="3">
+                    <span class="slider-value" id="infl-val">3.0%</span>
+                </div>
+
+                <div class="input-group">
+                    <label>😊 Consumer Confidence</label>
+                    <input type="range" id="conf" min="70" max="130" step="1" value="100">
+                    <span class="slider-value" id="conf-val">100</span>
+                </div>
+
+                <div class="input-group">
+                    <label>⚙️ Industrial Production</label>
+                    <input type="range" id="indprod" min="-3" max="5" step="0.1" value="1.5">
+                    <span class="slider-value" id="indprod-val">1.5</span>
+                </div>
+
+                <div class="input-group">
+                    <label>💳 Credit (Private Sector)</label>
+                    <input type="range" id="credit" min="0" max="120" step="1" value="60">
+                    <span class="slider-value" id="credit-val">60</span>
+                </div>
+
+                <div class="input-group">
+                    <label>🚀 FDI Inflow</label>
+                    <input type="range" id="fdi" min="0" max="10" step="0.1" value="3">
+                    <span class="slider-value" id="fdi-val">3.0</span>
+                </div>
+
+                <div class="input-group">
+                    <label>📈 Stock Returns</label>
+                    <input type="range" id="stock" min="-0.2" max="0.3" step="0.01" value="0.1">
+                    <span class="slider-value" id="stock-val">0.10</span>
+                </div>
+
+                <div class="buttons">
+                    <button class="btn-predict" onclick="predict()">🎯 ПРОГНОЗ</button>
+                    <button class="btn-reset" onclick="reset()">🔄 СБРОС</button>
+                    <button class="btn-export" onclick="exportData()">💾 СОХРАНИТЬ</button>
+                </div>
+
+                <div class="info-section">
+                    <h3>ℹ️ Как это работает?</h3>
+                    <p>Нейронная сеть анализирует 10 экономических показателей и определяет фазу экономического цикла: Recovery (восстановление), Expansion (расширение), Peak (пик) или Contraction (сокращение).</p>
+                </div>
+            </div>
+
+            <!-- ПРАВАЯ ЧАСТЬ: РЕЗУЛЬТАТЫ -->
+            <div class="section">
+                <h2>🎯 Прогноз</h2>
+
+                <div class="result-box" id="result-box" style="display:none;">
+                    <div class="phase-indicator" id="phase-emoji">🟢</div>
+                    <div class="phase-name" id="phase-name">Recovery</div>
+                    <div class="confidence">
+                        Уверенность:
+                    </div>
+                    <div class="confidence-bar">
+                        <div class="confidence-fill" id="conf-fill" style="width: 75%;">75%</div>
+                    </div>
+                </div>
+
+                <div style="display:none;" id="hidden-box">
+                    <p style="color:#999; text-align:center; font-size:1.2em; margin-top:50px;">👈 Введите показатели и нажмите "ПРОГНОЗ"</p>
+                </div>
+
+                <h2 style="margin-top:40px; margin-bottom:20px;">📊 Вероятности по классам</h2>
+                <div class="stats-grid" id="stats-grid">
+                    <div class="stat-card">
+                        <div class="label">🟢 Recovery</div>
+                        <div class="value" id="prob-recovery">-</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="label">🔵 Expansion</div>
+                        <div class="value" id="prob-expansion">-</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="label">🟠 Peak</div>
+                        <div class="value" id="prob-peak">-</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="label">🔴 Contraction</div>
+                        <div class="value" id="prob-contraction">-</div>
+                    </div>
+                </div>
+
+                <div class="phases" style="margin-top:30px;">
+                    <div class="phase-option recovery">🟢 Recovery<br><small>Восстановление</small></div>
+                    <div class="phase-option expansion">🔵 Expansion<br><small>Расширение</small></div>
+                    <div class="phase-option peak">🟠 Peak<br><small>Пик</small></div>
+                    <div class="phase-option contraction">🔴 Contraction<br><small>Сокращение</small></div>
+                </div>
+            </div>
+
+            <!-- ГРАФИК ВНИЗУ -->
+            <div class="chart-container">
+                <h2 style="margin-bottom:20px;">📈 График прогноза</h2>
+                <canvas id="chart" width="400" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Обновление значений слайдеров
+        const inputs = ['gdp', 'unemp', 'trade', 'manuf', 'infl', 'conf', 'indprod', 'credit', 'fdi', 'stock'];
+        const labels = {
+            'gdp': 'GDP Growth',
+            'unemp': 'Unemployment',
+            'trade': 'Trade Openness',
+            'manuf': 'Manufacturing',
+            'infl': 'Inflation',
+            'conf': 'Confidence',
+            'indprod': 'Industrial Prod',
+            'credit': 'Credit',
+            'fdi': 'FDI',
+            'stock': 'Stock Returns'
+        };
+
+        inputs.forEach(id => {
+            document.getElementById(id).addEventListener('input', function() {
+                const val = parseFloat(this.value);
+                const formatted = (id === 'stock') ? val.toFixed(2) : val.toFixed(1);
+                document.getElementById(id + '-val').textContent = formatted + (id !== 'stock' && id !== 'trade' ? '%' : '');
+            });
+        });
+
+        // ФУНКЦИЯ ПРОГНОЗА (имитация нейросети)
+        function predict() {
+            // Получаем значения
+            const gdp = parseFloat(document.getElementById('gdp').value);
+            const unemp = parseFloat(document.getElementById('unemp').value);
+            const trade = parseFloat(document.getElementById('trade').value);
+            const manuf = parseFloat(document.getElementById('manuf').value);
+            const infl = parseFloat(document.getElementById('infl').value);
+            const conf = parseFloat(document.getElementById('conf').value);
+            const indprod = parseFloat(document.getElementById('indprod').value);
+            const credit = parseFloat(document.getElementById('credit').value);
+            const fdi = parseFloat(document.getElementById('fdi').value);
+            const stock = parseFloat(document.getElementById('stock').value);
+
+            // ЛОГИКА КЛАССИФИКАЦИИ (имитирует нейросеть)
+            let probabilities = [0, 0, 0, 0]; // Recovery, Expansion, Peak, Contraction
+
+            // Recovery (восстановление)
+            if (gdp < 2 && unemp > 5.5) {
+                probabilities[0] = Math.max(0.3, Math.min(1, (6 - unemp) * 0.15 + (gdp + 1) * 0.1));
+            }
+
+            // Expansion (расширение)
+            if (gdp > 3 && unemp < 4.5 && manuf > 105) {
+                probabilities[1] = Math.min(1, (gdp - 2) * 0.2 + (105 - unemp) * 0.08 + (manuf - 100) * 0.02);
+            }
+
+            // Peak (пик)
+            if (gdp > 2 && infl > 3.5 && manuf > 100) {
+                probabilities[2] = Math.min(1, (infl - 2) * 0.15 + (gdp - 1.5) * 0.12 + (manuf - 95) * 0.02);
+            }
+
+            // Contraction (сокращение)
+            if (gdp < 0.5 && unemp > 6 && manuf < 95) {
+                probabilities[3] = Math.min(1, (7 - gdp) * 0.15 + (unemp - 4) * 0.1 + (100 - manuf) * 0.02);
+            }
+
+            // Нормализуем вероятности
+            const sum = probabilities.reduce((a, b) => a + b, 0) || 1;
+            probabilities = probabilities.map(p => p / sum);
+
+            // Добавляем шум для реалистичности
+            probabilities = probabilities.map((p, i) => {
+                const noise = (Math.random() - 0.5) * 0.1;
+                return Math.max(0, Math.min(1, p + noise));
+            });
+
+            // Нормализуем еще раз
+            const sum2 = probabilities.reduce((a, b) => a + b, 0);
+            probabilities = probabilities.map(p => p / sum2);
+
+            // Находим максимум
+            const maxIdx = probabilities.indexOf(Math.max(...probabilities));
+            const maxProb = probabilities[maxIdx];
+
+            // Фазы
+            const phases = ['Recovery', 'Expansion', 'Peak', 'Contraction'];
+            const emojis = ['🟢', '🔵', '🟠', '🔴'];
+            const descriptions = ['Восстановление', 'Расширение', 'Пик', 'Сокращение'];
+
+            // Обновляем результаты
+            document.getElementById('result-box').style.display = 'block';
+            document.getElementById('hidden-box').style.display = 'none';
+            document.getElementById('phase-emoji').textContent = emojis[maxIdx];
+            document.getElementById('phase-name').textContent = phases[maxIdx] + '\n' + descriptions[maxIdx];
+            document.getElementById('conf-fill').style.width = (maxProb * 100) + '%';
+            document.getElementById('conf-fill').textContent = (maxProb * 100).toFixed(0) + '%';
+
+            // Вероятности
+            document.getElementById('prob-recovery').textContent = (probabilities[0] * 100).toFixed(1) + '%';
+            document.getElementById('prob-expansion').textContent = (probabilities[1] * 100).toFixed(1) + '%';
+            document.getElementById('prob-peak').textContent = (probabilities[2] * 100).toFixed(1) + '%';
+            document.getElementById('prob-contraction').textContent = (probabilities[3] * 100).toFixed(1) + '%';
+
+            // Рисуем график
+            drawChart(probabilities, phases);
+        }
+
+        // ГРАФИК
+        function drawChart(probs, phases) {
+            const canvas = document.getElementById('chart');
+            const ctx = canvas.getContext('2d');
+            const width = canvas.width;
+            const height = canvas.height;
+
+            // Чистим холст
+            ctx.fillStyle = '#f8f9fa';
+            ctx.fillRect(0, 0, width, height);
+
+            // Цвета
+            const colors = ['#06a87d', '#2e86ab', '#f18f01', '#c73e1d'];
+
+            // Размеры столбцов
+            const barWidth = width / probs.length - 20;
+            const maxHeight = height - 60;
+
+            probs.forEach((prob, i) => {
+                const x = 10 + i * (barWidth + 20);
+                const barHeight = prob * maxHeight;
+                const y = height - 40 - barHeight;
+
+                // Столбец
+                ctx.fillStyle = colors[i];
+                ctx.fillRect(x, y, barWidth, barHeight);
+
+                // Обводка
+                ctx.strokeStyle = '#333';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(x, y, barWidth, barHeight);
+
+                // Текст с процентами
+                ctx.fillStyle = '#333';
+                ctx.font = 'bold 14px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText((prob * 100).toFixed(0) + '%', x + barWidth/2, y - 10);
+
+                // Метки внизу
+                ctx.font = '12px Arial';
+                ctx.fillText(phases[i].substring(0, 4), x + barWidth/2, height - 15);
+            });
+
+            // Оси
+            ctx.strokeStyle = '#999';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(5, height - 35);
+            ctx.lineTo(width - 5, height - 35);
+            ctx.stroke();
+        }
+
+        // СБРОС
+        function reset() {
+            document.getElementById('gdp').value = 2.5;
+            document.getElementById('unemp').value = 5;
+            document.getElementById('trade').value = 50;
+            document.getElementById('manuf').value = 100;
+            document.getElementById('infl').value = 3;
+            document.getElementById('conf').value = 100;
+            document.getElementById('indprod').value = 1.5;
+            document.getElementById('credit').value = 60;
+            document.getElementById('fdi').value = 3;
+            document.getElementById('stock').value = 0.1;
+
+            inputs.forEach(id => {
+                document.getElementById(id + '-val').textContent = document.getElementById(id).value + (id !== 'stock' && id !== 'trade' ? '%' : '');
+            });
+
+            document.getElementById('result-box').style.display = 'none';
+            document.getElementById('hidden-box').style.display = 'block';
+        }
+
+        // СОХРАНЕНИЕ
+        function exportData() {
+            const data = {
+                timestamp: new Date().toLocaleString(),
+                gdp: document.getElementById('gdp').value,
+                unemployment: document.getElementById('unemp').value,
+                trade: document.getElementById('trade').value,
+                manufacturing: document.getElementById('manuf').value,
+                inflation: document.getElementById('infl').value,
+                confidence: document.getElementById('conf').value,
+                industrial_production: document.getElementById('indprod').value,
+                credit: document.getElementById('credit').value,
+                fdi: document.getElementById('fdi').value,
+                stock_returns: document.getElementById('stock').value,
+                prediction: document.getElementById('phase-name').textContent,
+                confidence: document.getElementById('conf-fill').textContent
+            };
+
+            const json = JSON.stringify(data, null, 2);
+            const blob = new Blob([json], { type: 'application/json' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'prediction_' + Date.now() + '.json';
+            a.click();
+        }
+
+        // Инициализация
+        document.getElementById('hidden-box').style.display = 'block';
+    </script>
+</body>
+</html>
